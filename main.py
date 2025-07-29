@@ -7,12 +7,10 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# === LOAD TOKEN & ADMIN ID DARI .env ===
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
-# === FLASK SERVER ===
 app = Flask('')
 
 @app.route('/')
@@ -34,12 +32,11 @@ def keep_loop():
 def self_ping():
     while True:
         try:
-            requests.get("https://replit.com/@bellatasya171/terakir")  # Ganti jika perlu
+            requests.get("https://replit.com/@bellatasya171/kontol123#main.py")
         except:
             pass
         time.sleep(300)
 
-# === MESSAGE ===
 main_message = (
     "🎉 *Selamat datang juragan di BAHASENAK* 🎉\n\n"
     "Mau beli *VIP JURAGAN*? Langsung pilih paket VIP di bawah ini ya juragan 👇"
@@ -68,13 +65,10 @@ waiting_message = (
 
 user_transfer_state = set()
 
-# === HANDLER ===
 def start(update, context):
     user_id = update.message.from_user.id
     name = update.message.from_user.full_name
     update.message.reply_text(main_message, reply_markup=main_keyboard, parse_mode="Markdown")
-    
-    # Kirim info ke admin saat ada user baru
     if ADMIN_ID:
         context.bot.send_message(
             chat_id=ADMIN_ID,
@@ -85,8 +79,6 @@ def start(update, context):
 def handle_message(update, context):
     user_id = update.message.from_user.id
     text = update.message.text or ''
-    
-    # Forward ke admin
     if ADMIN_ID:
         user_name = update.message.from_user.full_name
         context.bot.send_message(
@@ -94,8 +86,6 @@ def handle_message(update, context):
             text=f"📩 Pesan dari [{user_name}](tg://user?id={user_id}):\n{text}",
             parse_mode="Markdown"
         )
-    
-    # Respon ke user
     if user_id in user_transfer_state:
         if update.message.photo:
             update.message.reply_text(waiting_message, parse_mode="Markdown")
@@ -108,7 +98,6 @@ def button_handler(update, context):
     query = update.callback_query
     query.answer()
     user_id = query.from_user.id
-
     vip_options = {
         "vip_indo": "🔥 *VIP INDO (50k)*\n\nVIP indo khusus INDONESIA...",
         "vip_jilbab": "🧕 *VIP JILBAB (50k)*\n\nSudah dipastikan durasinya panjang...",
@@ -116,12 +105,10 @@ def button_handler(update, context):
         "vip_japan": "🎌 *VIP JAPAN (50k)*\n\nDurasi panjang minimal 10 menit...",
         "vip_all": "💎 *ALL VIP (100k)*\n\nSemua paket langsung dikasih juragan...",
     }
-
     vip_keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("⬅️ Kembali", callback_data="back")],
         [InlineKeyboardButton("✅ Lanjutkan", callback_data="lanjut_transfer")]
     ])
-
     if query.data == "back":
         user_transfer_state.discard(user_id)
         query.edit_message_text(main_message, reply_markup=main_keyboard, parse_mode="Markdown")
@@ -131,14 +118,12 @@ def button_handler(update, context):
         user_transfer_state.add(user_id)
         query.edit_message_text(transfer_message, parse_mode="Markdown")
 
-# === JALANKAN BOT DAN KEEP ALIVE ===
 keep_alive()
 Thread(target=keep_loop, daemon=True).start()
 Thread(target=self_ping, daemon=True).start()
 
 updater = Updater(TOKEN, use_context=True)
 dp = updater.dispatcher
-
 dp.add_handler(CommandHandler("start", start))
 dp.add_handler(MessageHandler(Filters.all, handle_message))
 dp.add_handler(CallbackQueryHandler(button_handler))
